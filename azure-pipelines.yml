@@ -576,7 +576,7 @@ stages:
             --format JSON `
             --out security-reports/dependency-check `
             --suppression dependency-check-suppressions.xml `
-            --nvdApiKey $(NVD_API_KEY) || $true
+            --nvdApiKey e12a3546-53a3-40f0-9c61-235084b71c9f || $true
           
           # Check for vulnerable packages
           Write-Host "Checking for vulnerable NuGet packages..."
