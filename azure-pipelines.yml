@@ -38,7 +38,7 @@ stages:
     - task: DotNetCoreCLI@2
       displayName: '2. Build Solution'
       inputs:
-        command: 'build'
+        command: 'buildm'
         projects: '$(solution)'
         arguments: '--configuration $(buildConfiguration) --no-restore'
 
