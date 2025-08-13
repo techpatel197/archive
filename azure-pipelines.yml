@@ -281,10 +281,8 @@ stages:
     - task: DotNetCoreCLI@2
       displayName: '1. Restore Dependencies'
       inputs:
-        command: 'restore'
-        projects: '$(solution)'
-        arguments: '--locked-mode'
-        verbosityRestore: 'Normal'
+      command: 'restore'
+      projects: '$(solution)'
 
     # Build solution
     - task: DotNetCoreCLI@2
