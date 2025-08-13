@@ -44,6 +44,15 @@ stages:
         version: '$(dotNetVersion)'
         installationPath: $(Agent.ToolsDirectory)/dotnet
 
+  # Add this task before your 'Run All Tests' task
+    - task: DotNetCoreCLI@2
+      displayName: 'Build Solution for Testing'
+      inputs:
+        command: 'build'
+        projects: '$(solution)' # Or focus on test projects: '**/*Tests.csproj'
+        arguments: '--configuration $(debugConfiguration)' 
+
+
     # Install AI tools and dependencies
     - task: PowerShell@2
       displayName: 'Setup AI Analysis Tools'
@@ -568,7 +577,7 @@ stages:
       displayName: '7. Run All Tests with Coverage'
       inputs:
         command: 'test'
-        projects: '$(solution)'
+        projects: '**/dataarchaive.csproj' # Change this
         arguments: |
           --configuration $(debugConfiguration) 
           --no-build 
@@ -576,6 +585,8 @@ stages:
           --collect:"XPlat Code Coverage" 
           --settings coverlet.runsettings 
           --results-directory $(Agent.TempDirectory)/TestResults
+
+
 
     # AI-powered test result analysis
     - task: PowerShell@2
