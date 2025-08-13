@@ -572,12 +572,25 @@ stages:
           Write-Host "Checking for vulnerable NuGet packages..."
           dotnet list package --vulnerable --include-transitive > security-reports/vulnerable-packages.txt || $true
 
-    # Run all tests including generated ones
+  # Run all tests including generated ones
+#    - task: DotNetCoreCLI@2
+#      displayName: '7. Run All Tests with Coverage'
+#      inputs:
+#        command: 'test'
+#        projects: '**/dataarchaive.csproj' # Change this
+#        arguments: |
+#          --configuration $(debugConfiguration) 
+#          --no-build 
+#          --logger trx 
+#          --collect:"XPlat Code Coverage" 
+#          --settings coverlet.runsettings 
+#          --results-directory $(Agent.TempDirectory)/TestResults  
+
     - task: DotNetCoreCLI@2
-      displayName: '7. Run All Tests with Coverage'
+      displayName: 'Run All Tests with Coverage'
       inputs:
         command: 'test'
-        projects: '**/dataarchaive.csproj' # Change this
+        projects: '**/*.csproj'  # Adjust this to target your specific project
         arguments: |
           --configuration $(debugConfiguration) 
           --no-build 
@@ -585,7 +598,6 @@ stages:
           --collect:"XPlat Code Coverage" 
           --settings coverlet.runsettings 
           --results-directory $(Agent.TempDirectory)/TestResults
-
 
 
     # AI-powered test result analysis
