@@ -1,0 +1,95 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+- stage: CI
+  displayName: Continuous Integration
+  jobs:
+  - job: BuildAndTest
+    displayName: Build, Test, and Analyze
+    steps:
+    - checkout: self
+      fetchDepth: 0 # Fetches all history so git log can be used for release notes
+
+    # This is a standard setup step for a Node.js project.
+    # Replace this with the setup for your specific language (e.g., Maven, .NET, Python).
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js'
+
+    - script: |
+        # This assumes a Node.js project. Replace with your project's commands.
+        # e.g., 'mvn install', 'pip install -r requirements.txt'
+        npm install
+      displayName: '1. Install Dependencies'
+
+    - script: |
+        # Run your standard linting and unit tests.
+        # The pipeline will fail here if there are issues.
+        npm run lint
+        npm test
+      displayName: '2. Run Linter & Unit Tests'
+      
+    # =====================================================================
+    # ADVANTAGE 1: AUTOMATED CODE QUALITY & MAINTENANCE
+    # =====================================================================
+    - script: |
+        echo "--- AI-Powered Code Review ---"
+        echo "Running: gemini review --prompt 'Review this code for clarity, best practices, and potential bugs' $(git diff --name-only HEAD~1 HEAD)"
+        # Placeholder for actual Gemini CLI command
+        # git diff --name-only HEAD~1 HEAD | xargs -I {} gemini review --prompt "Review for clarity and bugs" {} > ai_review.txt
+      displayName: '3. AI-Powered Code Review'
+      condition: succeeded()
+
+    # =====================================================================
+    # ADVANTAGE 4: AI-POWERED SECURITY ANALYSIS
+    # =====================================================================
+    - script: |
+        echo "--- AI-Powered Security Scan ---"
+        echo "Running: gemini scan --prompt 'Scan for common security vulnerabilities like injection or XSS' src/"
+        # Placeholder for actual Gemini CLI command
+        # gemini scan --prompt "Scan for common security vulnerabilities" src/ > security_scan_report.txt
+      displayName: '4. AI-Powered Security Scan'
+      condition: succeeded()
+
+    # =====================================================================
+    # ADVANTAGE 3: AUTOMATED DOCUMENTATION
+    # =====================================================================
+    - script: |
+        echo "--- Generating Release Notes ---"
+        git log --pretty=oneline -n 20 > recent_commits.txt
+        echo "Running: gemini summarize --prompt 'Create user-facing release notes from these commits' recent_commits.txt"
+        # Placeholder for actual Gemini CLI command
+        # gemini summarize --prompt "Create user-facing release notes from these commits" recent_commits.txt > $(Build.ArtifactStagingDirectory)/release_notes.md
+        echo "New feature added for data archival. Bug fixes for reporting module." > $(Build.ArtifactStagingDirectory)/release_notes.md
+      displayName: '5. Generate AI Release Notes'
+      condition: succeeded()
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)'
+        artifact: 'ReleaseDocumentation'
+        publishLocation: 'pipeline'
+      displayName: '6. Publish Release Notes Artifact'
+      condition: succeeded()
+
+    # =====================================================================
+    # ADVANTAGE 2: INTELLIGENT LOG ANALYSIS ON FAILURE
+    # =====================================================================
+    - script: |
+        echo "--- A build step failed. Analyzing logs to find the root cause. ---"
+        echo "This step only runs when a previous step has failed."
+        echo "Running: gemini summarize --prompt 'This build failed. What was the root cause based on the logs?' $(System.DefaultWorkingDirectory)/build.log"
+        # In a real pipeline, you would need to capture the output of previous steps to a log file.
+        # For demonstration, we just print a message.
+      displayName: '7. Analyze Failure with AI'
+      condition: failed()

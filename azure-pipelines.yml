@@ -1,13 +1,16 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# ASP.NET Core CI Pipeline for .NET 8
+# This pipeline is tailored for the dataarchaive project.
 
 trigger:
 - main
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: 'ubuntu-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  # The solution file path relative to the repository root.
+  solution: 'dataarchaive.sln'
 
 stages:
 - stage: CI
@@ -17,61 +20,62 @@ stages:
     displayName: Build, Test, and Analyze
     steps:
     - checkout: self
-      fetchDepth: 0 # Fetches all history so git log can be used for release notes
+      fetchDepth: 0 # Fetches all history for release notes generation
 
-    # This is a standard setup step for a Node.js project.
-    # Replace this with the setup for your specific language (e.g., Maven, .NET, Python).
-    - task: NodeTool@0
+    # Use the .NET 8.0 SDK as required by the project file.
+    - task: UseDotNet@2
+      displayName: 'Install .NET 8.0 SDK'
       inputs:
-        versionSpec: '18.x'
-      displayName: 'Install Node.js'
+        packageType: 'sdk'
+        version: '8.x'
 
-    - script: |
-        # This assumes a Node.js project. Replace with your project's commands.
-        # e.g., 'mvn install', 'pip install -r requirements.txt'
-        npm install
-      displayName: '1. Install Dependencies'
+    - task: DotNetCoreCLI@2
+      displayName: '1. Restore Dependencies'
+      inputs:
+        command: 'restore'
+        projects: '$(solution)' # Restore all projects in the solution
 
-    - script: |
-        # Run your standard linting and unit tests.
-        # The pipeline will fail here if there are issues.
-        npm run lint
-        npm test
-      displayName: '2. Run Linter & Unit Tests'
+    - task: DotNetCoreCLI@2
+      displayName: '2. Build Solution'
+      inputs:
+        command: 'build'
+        projects: '$(solution)'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
+
+    - task: DotNetCoreCLI@2
+      displayName: '3. Run Tests'
+      inputs:
+        command: 'test'
+        projects: '$(solution)' # Run all test projects in the solution
+        arguments: '--configuration $(buildConfiguration) --no-build --no-restore'
       
     # =====================================================================
-    # ADVANTAGE 1: AUTOMATED CODE QUALITY & MAINTENANCE
+    # AI-POWERED ANALYSIS STEPS
     # =====================================================================
     - script: |
         echo "--- AI-Powered Code Review ---"
-        echo "Running: gemini review --prompt 'Review this code for clarity, best practices, and potential bugs' $(git diff --name-only HEAD~1 HEAD)"
-        # Placeholder for actual Gemini CLI command
-        # git diff --name-only HEAD~1 HEAD | xargs -I {} gemini review --prompt "Review for clarity and bugs" {} > ai_review.txt
-      displayName: '3. AI-Powered Code Review'
+        echo "Running: gemini review --prompt 'Review this C# code for clarity, best practices, and potential bugs' $(git diff --name-only HEAD~1 HEAD)"
+        # Placeholder for actual Gemini CLI command:
+        # git diff --name-only HEAD~1 HEAD | xargs -I {} gemini review --prompt "Review C# code for clarity and bugs" {} > ai_review.txt
+      displayName: '4. AI-Powered Code Review'
       condition: succeeded()
 
-    # =====================================================================
-    # ADVANTAGE 4: AI-POWERED SECURITY ANALYSIS
-    # =====================================================================
     - script: |
         echo "--- AI-Powered Security Scan ---"
-        echo "Running: gemini scan --prompt 'Scan for common security vulnerabilities like injection or XSS' src/"
-        # Placeholder for actual Gemini CLI command
-        # gemini scan --prompt "Scan for common security vulnerabilities" src/ > security_scan_report.txt
-      displayName: '4. AI-Powered Security Scan'
+        echo "Running: gemini scan --prompt 'Scan for common security vulnerabilities in C# like injection or misconfigurations' dataarchaive/"
+        # Placeholder for actual Gemini CLI command:
+        # gemini scan --prompt "Scan for common security vulnerabilities in C#" dataarchaive/ > security_scan_report.txt
+      displayName: '5. AI-Powered Security Scan'
       condition: succeeded()
 
-    # =====================================================================
-    # ADVANTAGE 3: AUTOMATED DOCUMENTATION
-    # =====================================================================
     - script: |
         echo "--- Generating Release Notes ---"
         git log --pretty=oneline -n 20 > recent_commits.txt
         echo "Running: gemini summarize --prompt 'Create user-facing release notes from these commits' recent_commits.txt"
-        # Placeholder for actual Gemini CLI command
+        # Placeholder for actual Gemini CLI command:
         # gemini summarize --prompt "Create user-facing release notes from these commits" recent_commits.txt > $(Build.ArtifactStagingDirectory)/release_notes.md
         echo "New feature added for data archival. Bug fixes for reporting module." > $(Build.ArtifactStagingDirectory)/release_notes.md
-      displayName: '5. Generate AI Release Notes'
+      displayName: '6. Generate AI Release Notes'
       condition: succeeded()
 
     - task: PublishPipelineArtifact@1
@@ -79,17 +83,12 @@ stages:
         targetPath: '$(Build.ArtifactStagingDirectory)'
         artifact: 'ReleaseDocumentation'
         publishLocation: 'pipeline'
-      displayName: '6. Publish Release Notes Artifact'
+      displayName: '7. Publish Release Notes Artifact'
       condition: succeeded()
 
-    # =====================================================================
-    # ADVANTAGE 2: INTELLIGENT LOG ANALYSIS ON FAILURE
-    # =====================================================================
     - script: |
         echo "--- A build step failed. Analyzing logs to find the root cause. ---"
-        echo "This step only runs when a previous step has failed."
-        echo "Running: gemini summarize --prompt 'This build failed. What was the root cause based on the logs?' $(System.DefaultWorkingDirectory)/build.log"
-        # In a real pipeline, you would need to capture the output of previous steps to a log file.
-        # For demonstration, we just print a message.
-      displayName: '7. Analyze Failure with AI'
+        echo "Running: gemini summarize --prompt 'This build failed. What was the root cause based on the logs?'"
+        # In a real pipeline, you would capture logs from previous steps to a file and pass it to Gemini.
+      displayName: '8. Analyze Failure with AI'
       condition: failed()
