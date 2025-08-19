@@ -15,14 +15,19 @@ jobs:
   steps:
   - checkout: self
 
-  - script: |
-      echo "Installing Node.js..."
-      curl -fsSL https://deb.nodesource.com/setup_16.x | bash -  # Change to the desired Node.js version
-      apt-get install -y nodejs
 
   - script: |
-      echo "Installing Gemini CLI..."
-      curl -sSL https://get.gemini.com/cli | bash  # Adjust the installation command as necessary
+      echo "Installing curl"
+      apt install -y curl && curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+
+  - script: |
+      echo "node"
+      sudo apt install -y nodejs
+
+
+  - script: |
+      echo "install gemini cli"
+      npm install -g @google/gemini-cli
 
 
   - script: |
