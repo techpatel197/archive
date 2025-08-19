@@ -14,9 +14,16 @@ jobs:
     image: 'mcr.microsoft.com/dotnet/sdk:6.0'  # Use the appropriate .NET SDK version
   steps:
   - checkout: self
+
+  - script: |
+      echo "Installing Node.js..."
+      curl -fsSL https://deb.nodesource.com/setup_16.x | bash -  # Change to the desired Node.js version
+      apt-get install -y nodejs
+
   - script: |
       echo "Installing Gemini CLI..."
-      curl -sSL https://get.gemini.com/cli | bash 
+      curl -sSL https://get.gemini.com/cli | bash  # Adjust the installation command as necessary
+
 
   - script: |
       echo "Building the .NET project..."
