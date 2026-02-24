@@ -37,8 +37,7 @@ jobs:
   - script: |
       echo "Running code analysis with Gemini CLI..."
       gemini analyze dataarchaive.sln  # Adjust as necessary for your project
-    env:
-      GEMINI_API_KEY: AIzaSyBhQc_CUHs3EGpo2nzkEStTVXTrLP30cIg  # Ensure you have this variable set in your pipeline variables
+
 
   - script: |
       echo "Building Docker image..."
