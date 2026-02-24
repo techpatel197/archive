@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mssql
+spec:
+  serviceName: mssql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mssql
+  template:
+    metadata:
+      labels:
+        app: mssql
+    spec:
+      nodeSelector:
+        nodetype: backend
+
+      securityContext:
+        fsGroup: 10001
+
+      containers:
+      - name: mssql
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 1433
+          name: tds
+        env:
+        - name: ACCEPT_EULA
+          value: "Y"
+        - name: MSSQL_PID
+          value: "Developer"
+        - name: SA_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mssql-secret
+              key: SA_PASSWORD
+
+        volumeMounts:
+        - name: mssqldata
+          mountPath: /var/opt/mssql
+
+        startupProbe:
+          tcpSocket:
+            port: tds
+          failureThreshold: 30
+          periodSeconds: 5
+
+        readinessProbe:
+          tcpSocket:
+            port: tds
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 2
+
+      volumes:
+      - name: mssqldata
+        hostPath:
+          path: /data/mssql/data        # YOUR HOSTPATH
+          type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mssql
+spec:
+  clusterIP: None
+  selector:
+    app: mssql
+  ports:
+    - name: tds
+      port: 1433
